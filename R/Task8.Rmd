@@ -1,0 +1,68 @@
+---
+title: "Function_Code"
+output: md_document
+---
+
+
+```{r}
+library(tidyr)
+library(ggplot2)
+library(dplyr)
+
+
+data <- read.csv("testdata.csv")
+
+  # Define a function that can issue warnings and errors
+Adding_Function <- function(df, a, b, sum) {
+  if (class(df) != "data.frame"){
+    warning("There isnt a dataframe")
+}
+   if( !(a %in% colnames(df)) | !(b %in% colnames(df))){
+    warning("Not a column to add")
+   }
+  
+  tryCatch(df$sum <- (df[ , a] + df[, b]),
+           warning=function(w){     #not sure why the 'w' is needed, will look into it..
+             message("Cannot add non-numerics")
+             return(NA)
+             
+           })
+  return(df)
+}
+
+             
+             
+  
+Adding_Function(data)
+ 
+
+
+
+#Using loops to preform an iteration   
+  test.vec <- 1:10^4
+my_sum <- function(x){
+  y <- 0
+  for(i in x){
+  y <- y+i
+  }
+  return(y)
+}
+
+#This should result in 50005000
+my_sum(test.vec)
+
+
+# Showing the loop function working with another dataset.
+#install.packages("microbenchmark")
+library(microbenchmark)
+
+test.vec <- 1:10^4
+microbenchmark(
+    my_sum(test.vec),
+    sum(test.vec)
+    )
+
+```
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Cmd+Option+I*.
+

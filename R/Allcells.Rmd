@@ -1,0 +1,87 @@
+TCell Interation and Proximity to an Infected Hepatocyte; Analysis of attraction between specific and nonspecific Tcells.
+
+#Introduction
+T cells are the body's line of defense against a roaming infection and can be the reason that an infection persists or is eliminated without even a sneeze. For malaria, Tcells are our only weapons to fight this ruthless infection. Malaria is a parasite that enters the organism's body by way of an injection or a transfer of bodily fluids with an infected person. Once malaria has entered the body it hijacks blood cells and enventually makes its way to the liver. The liver is the area of the body that the parasite will replicate and then be poised to infect other organs. The T cells that are roaming around in the liver have the chance to hinder the infection from spreading and research is ongoing to determine if a specific T cell is, in anyway, attracted to its target cell. 
+
+#Methods
+This project is a joint project between Dr. Ian Cockburn and others at University of Tennessee. The goal of this project is to assess the attraction of a specilized T cell towards an infected target cell. In order to test this, mice were infected with malaria and allowed to incubate until liver stage malaria was garunteed. After 20 hours, malria specific T cells and chicken albumin T cells were GPF labeled and injected into the mouse liver. After 48 hours, the mice were exposed to a confocal spining disc microscope and the 3D positions of the GFP labeled Tcells and malaria cell was tracked. There were 11 nonspecific cells, 17 specific cells and one parasitic infected hepatocyte. The three dimentional distance at each of the 18 time points was calculated with the Ecludian distance formula.
+
+
+
+```{r}
+library(readr)
+Allcells <- read_csv("../data/Allcells.csv")
+View(Allcells)
+
+library(dplyr)
+library(tidyverse)
+library(ggplot2)
+
+# Example of how to use dplyr
+
+# Group the data frame (actually a "tibble") by time, parent, and type
+Allcells <- group_by(Allcells, Type, Parent, Time)
+
+# Get legal names
+names(Allcells)[1:3] <- c("x", "y", "z")
+
+my_summ <- summarise(Allcells, 
+          mean.x=mean(x),
+          sd.x=sd(x))
+
+# Drop the timepoint 1 (in two redundant ways)
+Allcells_t2 <- Allcells[Allcells$Time !=1, ]
+Allcells_t2 <- filter(Allcells, Time !=1)
+
+# Create a data frame with all of the data in the original Allcells, 
+#plus the x y and z for the parasite at the corresponding time
+# Pull out the Parasite in the tcell filter
+tcells <- filter(Allcells, Type != "Parasite")
+
+# The tidyverse 'piped' way (but it doesn't quite work)
+# parasite <- filter(Allcells, Type == "Parasite") %>% 
+#   dplyr::rename(p.x, p.y, p.z) %>% 
+#   ungroup() %>% 
+#   select(Time, p.x, p.y, p.z)
+
+# The old-school way
+parasite <- filter(Allcells, Type == "Parasite")
+parasite <- rename(parasite, p.x=x, p.y=y, p.z=z)
+parasite <- ungroup(parasite)
+parasite <- select(parasite, Time, p.x, p.y, p.z)
+
+# old-fashioned merge
+# merged_data <- merge(parasite, tcells, by=c("Time"), ) # This is the slow, old-fashioned way
+
+# dplyr merge : one of the _join functions - does the same thing as merge, but must faster
+
+merged_data <- left_join(tcells, parasite, by="Time") %>%
+  mutate(distance = sqrt((p.x - x)^2 + (p.y - y)^2 + (p.z - z)^2)) %>%
+  group_by(Time, Type) 
+
+ggplot(merged_data, aes(x=Time, y=distance,  colour=Type)) +
+  geom_line(aes(group=Parent)) +
+  facet_wrap(~Type)
+
+merged_data <- left_join(tcells, parasite, by="Time") %>%
+  mutate(distance = sqrt((p.x - x)^2 + (p.y - y)^2 + (p.z - z)^2)) %>%
+  group_by(Time, Type) 
+
+ggplot(merged_data, aes(x=Time, y=distance,  colour=Type)) +
+  geom_line(aes(group=Parent)) +
+  facet_wrap(~Type)
+
+summ_data <- summarise_(mean.distance = mean(distance, na.rm=TRUE),
+            sd.distance = sd(distance, na.rm=TRUE)) 
+  
+
+ggplot(summ_data, aes(x=Time, y=mean.distance, colour=Type)) + 
+  geom_pointrange(aes(ymin=mean.distance-sd.distance, ymax=mean.distance+sd.distance)) 
+
+ggplot(merged_data, aes(x=Time, y=distance, colour=Type)) +
+  geom_point(aes(group=Parent)) + 
+  facet_grid(Type ~ Parent)
+
+merged_data <- mutate(merged_data)
+
+
