@@ -1,0 +1,53 @@
+---
+title: "R Notebook"
+output: md_document
+---
+
+Today we are going to complete my own task of plotting storms from the nasaweather package based on the different catagories.
+
+
+```{r}
+library(tidyr)
+library(ggplot2)
+library(dplyr)
+
+#install.packages("nasaweather")
+library(nasaweather)
+
+
+storms <- nasaweather::storms
+
+storms %>%
+  group_by(year, type) %>%
+  count() %>%
+  ggplot(aes(x=year, y=n, color=type)) +
+    geom_point()+
+    labs(x="Year", y="Frequency")
+    
+
+
+```
+Looking at the year with the most storms, which storm was the most desistating?
+
+```{r}
+library(tidyr)
+library(ggplot2)
+library(dplyr)
+
+
+storms %>%
+  filter(year=="1995", type=="Hurricane")%>%
+  ggplot(aes(x=day, y=wind, group = "name"))+
+  geom_point()+
+  facet_wrap("name")+
+  labs(x="Days", y="Wind(mph)")
+  
+
+#Find out what day of what month was the most vicious hurricane during Hurricane Felix's reign. 
+
+#Felix <- storms %>%
+#  filter(name=="Fleix")
+  
+
+
+```
